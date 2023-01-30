@@ -103,44 +103,43 @@ def add_posts(load: Newposts):
 
 @app.get("/params/latest")
 def get_recent():
-    recent = local_posts[len(local_posts)-1]
-    return {"recent":recent}
+    cur.execute("""SELECT * FROM social_posts 
+                ORDER BY post_id DESC
+                LIMIT 1""")
+    recent_post = cur.fetchone()
+    return {"Recent Post":recent_post}
 
 @app.get("/params/{prm}")
 #Note the :int, this will validate the parameter
 def print_params(prm :int, response: Response):
     print(prm)
-    requestedPost = return_post(prm)
+    #There is a gotcha here. The id has to be string when sending the query.
+    #There is an extra comman after str(prm), for some reason!!!
+    cur.execute("""SELECT * FROM social_posts WHERE post_id = %s""",(str(prm),))
+    requestedPost = cur.fetchone()
     if not requestedPost:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail=f'The id {prm} is not found')
-        #response.status_code = status.HTTP_404_NOT_FOUND
-        #return {"hold on":f"The id {prm} is not found"}
-    return {"message":"Got parameter","requested_post":requestedPost}
+    return {"message":"Got post","requested_post":requestedPost}
 
 @app.delete("/delete/{id}",status_code = status.HTTP_204_NO_CONTENT)
 #when using the 204 status, the remaining posts or any data cannot be sent
 def delete_posts(id :int):
-    get_idx = return_index_post(id)
-    if get_idx == None:
+    cur.execute("""DELETE FROM social_posts WHERE post_id = %s RETURNING *""",(str(id))) 
+    deleted = cur.fetchone()
+    if deleted == None:
         raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="the id is not found"))
-    local_posts.pop(get_idx)
-    #return {"msg":"post deleted","remaining posts":local_posts}
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @app.put("/update/{id}",status_code=status.HTTP_201_CREATED)
 def update_post(id :int,post:Newposts):
-    index = return_index_post(id)
-    if index == None:
+    cur.execute("""UPDATE social_posts SET title = %s,content = %s WHERE post_id = %s RETURNING *""",
+                 (post.title,post.content,str(id)))
+    executed = cur.fetchone()
+    if executed == None:
         raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND))
-    #Converting the recieved post into dictionary
-    post_data = post.dict()
 
     #update the id in the recieved data and replace that in the local_posts
-
-    post_data['id'] = id
-    local_posts[index] = post_data
     return {'message':"data updated",
-            "data":local_posts}
-
+            "data":executed} 
