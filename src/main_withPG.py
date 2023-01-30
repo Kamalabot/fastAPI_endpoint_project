@@ -1,25 +1,55 @@
 #!/usr/bin/env python
 
-#This is the trial script learning the fastapi library
+#This is the mail script where the PG database connectivity is implemented 
 from random import randint
 # The import of Response, followed by Status and HTTPException were all 
 # required for return appropriate response when the result is Null
 from fastapi import FastAPI,Response,status,HTTPException
 from fastapi.params import Body
 from pydantic import BaseModel
-from typing import Optional
+import time
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+import configparser
+
+creden = configparser.ConfigParser()
+creden.read_file(open('calter.config'))
+
+host = creden["LOCALPG"]["PG_HOST"]
+database = creden["LOCALPG"]["PG_DB_FAST"]
+port = creden["LOCALPG"]["PG_PORT"]
+passwd = creden["LOCALPG"]["PG_PASS"]
+user = creden["LOCALPG"]["PG_UNAME"]
+
+#In order to retry the connection before the server starts the while loop is used
+while True:
+    try:
+        conn = psycopg2.connect(host=host,
+                        dbname=database,user=user,
+                        password=passwd,port=port,
+                            cursor_factory=RealDictCursor)
+
+        conn.set_session(autocommit=True)
+
+        cur = conn.cursor()
+        print("connection established...")
+        break
+
+    except Exception as e:
+        print(e)
+        time.sleep(2)
 
 #In order to enforce schema on the post requests following class is declared
 class Newposts(BaseModel):
     title:str
     content:str
-    category:int = 5
-    rating:Optional[int] = None
+    is_published: bool = True
+
+#Initiate the connection with postgres database 
+
 
 app = FastAPI()
-
-local_posts =[{"title":"post 1","content":"We have to work on the FastAPI very fast","id":1},
-              {"title":"kafka kites","content":"There has never been a time like this","id":2}]
 
 def return_post(ide):
     """This function returns the matching posts"""
@@ -44,44 +74,33 @@ def return_index_post(ide):
 async def root():
     #When the root function is called the message is 
     #is returned.
-    return {"message":"Hello Fast world"}
+    return {"db_server":"This is from Database Server"}
 
 #below handle informs path of the website
 @app.get("/posts")
 def get_posts():
+    #Query the table 
+    
+    cur.execute("SELECT * FROM social_posts")
+    
+    #get the data into templist
+    
+    postsList = cur.fetchall()
     return {"YourPosts":"There you go. Your posts",
-            "data":local_posts}
-'''
-#lets work on the POST request without pydantic
-@app.post("/createposts")
-def make_posts(payLoad: dict = Body):
-    print(payLoad)
-    return {"message":"SUCCESS"}
-'''
-'''
-#lets work on the POST request withpydantic
-@app.post("/createposts")
-def make_pydanticposts(load: Newposts):
-    print(load)
-    print(f"The load title is {load.title}")
-    return {"message":"Success with Pydantic","your post":load}
-'''
+            "data":postsList}
 #lets make createposts useful and load data into local_posts array
 
 @app.post("/addposts",status_code=status.HTTP_201_CREATED)
 def add_posts(load: Newposts):
-    id_post = randint(0,5086268)
-    #The Pydantic objects don't support the item assignment, so convert to dict
-    post_data = load.dict()
-    #Adding the updated id number
-    post_data['id']=id_post
+    print(load)
     #Appending the post to local array
-    local_posts.append(post_data)
+    cur.execute("""INSERT INTO social_posts(title, content, is_published)
+                VALUES(%s, %s, %s) RETURNING * """,(load.title,load.content,
+                                                     load.is_published))
+    updated_post = cur.fetchone()
     #returning the response along with the array data
-    return{"message":"post created",
-           "updated posts": local_posts}
-#The below route was pulled up in the file since fastapi will 
-#resolve the "latest" wrongly
+    return{"message":updated_post}
+
 @app.get("/params/latest")
 def get_recent():
     recent = local_posts[len(local_posts)-1]
