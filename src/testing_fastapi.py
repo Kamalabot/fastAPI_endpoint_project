@@ -4,17 +4,12 @@
 
 from fastapi import FastAPI
 
-app = FastAPI()
+super_app = FastAPI()
 
 #below decorator informs path and http method
-@app.get("/")
+@super_app.get("/")
 #async root function is initiated
-async def root():
+def rooted():
     #When the root function is called the message is 
     #is returned.
-    return {"message":"Hello Fast world"}
-
-#below handle informs path of the website
-@app.get("/posts")
-def get_posts():
-    return {"YourPosts":"There you go. Your posts"}
+    return {"lets Go":"Where to go? Fast world"}
