@@ -13,6 +13,7 @@ class res_post(BaseModel):
     title:str
     is_published:bool
     post_id:int
+    time_created:datetime
     #created_at: datetime
 #the below class is declared to help pydantic model to convert the 
 #sqlalchemy object to dict
