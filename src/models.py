@@ -12,4 +12,14 @@ class Post(Base):
     is_published = Column(Boolean, default=True, nullable=False)
     time_created = Column(TIMESTAMP(timezone=True),
                           nullable=False, server_default=text('now()'))
+#When you create the ORM model, the server may be reloading automatically.
+#Once the table is created in the database, it has to be dropped manually.
+#SQLAlchemy will not drop it for you...
+class User(Base):
+    __tablename__ = "users"
+    user_id = Column(Integer, primary_key=True, nullable=False)
+    user_create_time = Column(TIMESTAMP(timezone=True),nullable=False,
+                              server_default=text('now()'))
+    email = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
 

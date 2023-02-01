@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 
 class req_post(BaseModel):
@@ -17,5 +17,16 @@ class res_post(BaseModel):
     #created_at: datetime
 #the below class is declared to help pydantic model to convert the 
 #sqlalchemy object to dict
+    class Config:
+        orm_mode = True
+
+class create_user(BaseModel):
+    email:EmailStr
+    password:str
+
+class res_user(BaseModel):
+    user_id:str
+    email:str
+
     class Config:
         orm_mode = True

@@ -11,6 +11,7 @@
 from fastapi import Depends, FastAPI,Response,status,HTTPException
 from fastapi.params import Body
 import time
+from typing import List
 
 #models module contains the real database table schema that 
 #established the connectivity to tables that is required in this api 
@@ -23,7 +24,9 @@ from .databaseORM import engine, get_db
 models.Base.metadata.create_all(bind=engine)
 
 #importing the communication schema from separate file
-from .comm_schema import req_post,create_post,res_post
+from .comm_schema import req_post,create_post,res_post,create_user,res_user
+
+from .utils import hasher
 
 app = FastAPI()
 
@@ -36,7 +39,7 @@ async def root():
     return {"db_server":"This is from Database Server"}
 
 #The other /posts has been deleted 
-@app.get("/posts")
+@app.get("/posts",response_model=List[res_post])
 def get_ormres(db: Session = Depends(get_db)):
     #querying the database session
     data_posts = db.query(models.Post).all()
@@ -85,7 +88,7 @@ def delete_posts(id :int,db: Session = Depends(get_db)):
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
-@app.put("/update/{id}",status_code=status.HTTP_201_CREATED)
+@app.put("/update/{id}",status_code=status.HTTP_201_CREATED,response_model=res_post)
 def update_post(id :int,post:create_post,db: Session = Depends(get_db)):
     save_query = db.query(models.Post).filter(models.Post.post_id == id)
 
@@ -97,3 +100,33 @@ def update_post(id :int,post:create_post,db: Session = Depends(get_db)):
 
     #update the id in the recieved data and replace that in the local_posts
     return save_query.first()
+
+###We will start creating routes for user addition####
+
+@app.post("/addusers",status_code=status.HTTP_201_CREATED,response_model=res_user)
+def add_users(user_load:create_user,db: Session = Depends(get_db)):
+    #hash the password
+    #pass_hash = passwd_context.hash(user_load.password)
+    #update the hashed password into the dict
+    user_load.password = hasher(user_load.password)
+    new_user = models.User(**user_load.dict())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+@app.get("/get_users",response_model=List[res_user])
+def get_users(db: Session = Depends(get_db)):
+    #querying the database session
+    data_users = db.query(models.User).all()
+    return data_users
+
+@app.get('/get_id/{user_id}',response_model = res_user)
+def find_user(user_id:int, db: Session = Depends(get_db)):
+    one_user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if one_user == None:
+        raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="the id is not found"))
+    return one_user
+
+
