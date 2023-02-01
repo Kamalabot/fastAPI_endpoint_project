@@ -19,9 +19,12 @@ router = APIRouter(
 
 #The other / has been deleted 
 @router.get("/",response_model=List[res_post])
-def get_ormres(db: Session = Depends(get_db)):
+def get_ormres(limit:int=2,skip:int=2,db: Session = Depends(get_db),
+               current_user=Depends(get_current_user)):
     #querying the database session
-    data_posts = db.query(models.Post).all()
+    print(limit)
+    data_posts = db.query(models.Post).filter(models.Post.owner_id == current_user). \
+            limit(limit).offset(skip).all()
     return data_posts
 
 #lets make createposts useful and load data into local_posts array
