@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
 from datetime import datetime
 
 class req_post(BaseModel):
@@ -34,3 +35,10 @@ class res_user(BaseModel):
 class UserLogin(BaseModel):
     email:EmailStr
     password:str
+
+class Token(BaseModel):
+    access_token: str
+    token_typ: str
+
+class TokenData(BaseModel):
+    username: Optional[str] = None

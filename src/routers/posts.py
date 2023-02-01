@@ -6,6 +6,7 @@ import time
 from .. import models 
 from ..comm_schema import res_post, create_post,req_post
 from typing import List
+from ..oauth import get_current_user 
 
 #The ORM engine is created in separate file called database
 from sqlalchemy.orm import Session
@@ -26,7 +27,8 @@ def get_ormres(db: Session = Depends(get_db)):
 #lets make createposts useful and load data into local_posts array
 
 @router.post("/addposts",status_code=status.HTTP_201_CREATED,response_model=res_post)
-def add_posts(load: req_post,db: Session = Depends(get_db)):
+def add_posts(load: req_post,db: Session = Depends(get_db),
+              current_user:int = Depends(get_current_user)):
 
 #**load.dict() will take care of converting the variables in the format models will accept
     new_post = models.Post(**load.dict())
