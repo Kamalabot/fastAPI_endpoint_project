@@ -26,7 +26,7 @@ class create_user(BaseModel):
 
 class res_user(BaseModel):
     user_id:str
-    email:str
+    email:EmailStr
 
     class Config:
         orm_mode = True
