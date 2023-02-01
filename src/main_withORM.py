@@ -9,7 +9,7 @@ from fastapi import Depends, FastAPI,Response,status,HTTPException
 
 from . import models
 
-from .routers import posts, users
+from .routers import posts, users, auth
 
 #The ORM engine is created in separate file called database
 from sqlalchemy.orm import Session
@@ -21,3 +21,4 @@ app = FastAPI()
 
 app.include_router(posts.router)
 app.include_router(users.router)
+app.include_router(auth.router)
