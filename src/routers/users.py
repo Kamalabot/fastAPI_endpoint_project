@@ -12,7 +12,10 @@ from typing import List
 from sqlalchemy.orm import Session
 from ..databaseORM import get_db
 
-router = APIRouter()
+router = APIRouter(
+        prefix='/user',
+        tags=['Users']
+        )
 
 @router.post("/addusers",status_code=status.HTTP_201_CREATED,response_model=res_user)
 def add_users(user_load:create_user,db: Session = Depends(get_db)):

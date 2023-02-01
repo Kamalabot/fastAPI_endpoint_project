@@ -11,10 +11,13 @@ from typing import List
 from sqlalchemy.orm import Session
 from ..databaseORM import get_db
 
-router = APIRouter()
+router = APIRouter(
+        prefix = '/posts',
+        tags = ['Posts']
+        )
 
-#The other /posts has been deleted 
-@router.get("/posts",response_model=List[res_post])
+#The other / has been deleted 
+@router.get("/",response_model=List[res_post])
 def get_ormres(db: Session = Depends(get_db)):
     #querying the database session
     data_posts = db.query(models.Post).all()
