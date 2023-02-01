@@ -31,7 +31,7 @@ def add_posts(load: req_post,db: Session = Depends(get_db),
               current_user = Depends(get_current_user)):
     
 #**load.dict() will take care of converting the variables in the format models will accept
-    new_post = models.Post(**load.dict())
+    new_post = models.Post(owner_id=current_user,**load.dict())
     #new_post = models.Post(title=load.title, content=load.content, is_published=load.is_published)
 #need to present the query to engine
     db.add(new_post)
@@ -59,26 +59,32 @@ def print_params(prm :int, db: Session = Depends(get_db)):
 
 @router.delete("/delete/{id}",status_code = status.HTTP_204_NO_CONTENT)
 #when using the 204 status, the remaining posts or any data cannot be sent
-def delete_posts(id :int,db: Session = Depends(get_db)):
+def delete_posts(id :int,db: Session = Depends(get_db),
+                 current_user=Depends(get_current_user)):
     one_row = db.query(models.Post).filter(models.Post.post_id == id) 
     if one_row.first() == None:
         raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="the id is not found"))
+    if one_row.first().owner_id != current_user:
+        raise(HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                             detail="Not authorised"))
     one_row.delete(synchronize_session = False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.put("/update/{id}",status_code=status.HTTP_201_CREATED,response_model=res_post)
-def update_post(id :int,post:create_post,db: Session = Depends(get_db)):
+def update_post(id :int,post:create_post,db: Session = Depends(get_db),
+                current_user=Depends(get_current_user)):
     save_query = db.query(models.Post).filter(models.Post.post_id == id)
 
     if save_query.first()== None:
         raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND))
 
+    if save_query.first().owner_id != current_user:
+        raise(HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                             detail="Not authorised"))
+
     save_query.update(post.dict(),synchronize_session=False)
     db.commit()
 
     #update the id in the recieved data and replace that in the local_posts
-    return save_query.first()
-
-
