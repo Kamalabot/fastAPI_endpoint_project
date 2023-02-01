@@ -13,15 +13,19 @@ port = creden["LOCALPG"]["PG_PORT"]
 passwd = creden["LOCALPG"]["PG_PASS"]
 user = creden["LOCALPG"]["PG_UNAME"]
 
+#creating the database connection string
 SQLALCHEMY_DATABASE_URL = f"postgresql://{user}:{passwd}@{host}/{database}"
 
+#intialising the engine for database connectivity
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
+#Establishing the session for connection
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+#A class that interacts with the database as an object
 Base = declarative_base()
 
-# Dependency
+# Dependency that can be exported as a function
 def get_db():
     db = SessionLocal()
     try:
