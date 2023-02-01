@@ -32,7 +32,6 @@ def verify_access_token(token:str, cred_exception):
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print(payload)
 
         id = payload.get("user_id")
     
@@ -46,10 +45,10 @@ def verify_access_token(token:str, cred_exception):
     return token_data
 
 def get_current_user(token:str = Depends(oauth2_scheme),db: Session = Depends(get_db)):
-    print(f'in get_c {token}')
     cred_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                    detail='Could not validate',
                                    headers={"WWW-Authenticate":"Bearer"})
     token = verify_access_token(token, cred_exception)
-    user = db.query(models.User).filter(models.User.email == token.username).first
+    user = db.query(models.User).filter(models.User.user_id == token.id).first()
+    print(f'at get_current_user {user}')
     return user

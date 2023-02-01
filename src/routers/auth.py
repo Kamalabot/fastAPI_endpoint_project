@@ -22,7 +22,7 @@ router = APIRouter(tags=['Auth'])
 def login(user_cred:OAuth2PasswordRequestForm = Depends(),
           db : Session = Depends(get_db)):
     user_data = db.query(models.User).filter(models.User.email == user_cred.username).first()
-    
+    print(user_data) 
     if not user_data:
         raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="the user_id is not found"))
@@ -33,9 +33,9 @@ def login(user_cred:OAuth2PasswordRequestForm = Depends(),
         raise(HTTPException(status_code=status.HTTP_404_NOT_FOUND,
                             detail="Wrong Password"))
 
-    access_token = create_access_token(data = {"user_id":user_cred.username})
+    access_token = create_access_token(data = {"user_id":user_data.user_id})
     return {"access_token":access_token, "token_type":"bearer"}
-
+#
 
     
       

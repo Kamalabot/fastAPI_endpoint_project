@@ -28,8 +28,8 @@ def get_ormres(db: Session = Depends(get_db)):
 
 @router.post("/addposts",status_code=status.HTTP_201_CREATED,response_model=res_post)
 def add_posts(load: req_post,db: Session = Depends(get_db),
-              current_user:int = Depends(get_current_user)):
-
+              current_user = Depends(get_current_user)):
+    
 #**load.dict() will take care of converting the variables in the format models will accept
     new_post = models.Post(**load.dict())
     #new_post = models.Post(title=load.title, content=load.content, is_published=load.is_published)
