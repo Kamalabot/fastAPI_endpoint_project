@@ -4,10 +4,24 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+from src.models import Base
+
+import configparser
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+creden = configparser.ConfigParser()
+creden.read_file(open('calter.config'))
+host = creden["LOCALPG"]["PG_HOST"]
+database = creden["LOCALPG"]["PG_DB_FAST"]
+port = creden["LOCALPG"]["PG_PORT"]
+passwd = creden["LOCALPG"]["PG_PASS"]
+user = creden["LOCALPG"]["PG_UNAME"]
+
+#creating the database connection string
+config.set_main_option("sqlalchemy.url",f"postgresql+psycopg2://{user}:{passwd}@{host}:{port}/{database}")
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -18,7 +32,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = None
+target_metadata = Base.metadata 
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
