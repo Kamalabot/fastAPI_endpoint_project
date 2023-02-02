@@ -26,6 +26,7 @@ class User(Base):
                               server_default=text('now()'))
     email = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
 
 class Vote(Base):
     __tablename__ = "votes"
